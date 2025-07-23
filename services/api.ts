@@ -47,7 +47,7 @@ export interface EventResponse {
 
 // Axios instance
 const api: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://nepal-api.indirex.io',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://nepal-api.indirex.io/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
