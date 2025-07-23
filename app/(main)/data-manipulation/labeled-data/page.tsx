@@ -8,13 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Eye, Search } from 'lucide-react';
 import { 
-  getLabeledEvents, 
+  getManuallyLabeledEvents, 
   LabeledEventResponse, 
-  LabeledEventFilter 
+  LabeledEventFilter,
 } from '@/services/stream.service';
 
 export default function LabeledDataTablePage() {
@@ -24,33 +25,37 @@ export default function LabeledDataTablePage() {
   const [totalPages, setTotalPages] = useState(1);
   const [deviceFilter, setDeviceFilter] = useState('');
   const [labeledByFilter, setLabeledByFilter] = useState('');
+  const [detectionTypeFilter, setDetectionTypeFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [eventType, setEventType] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedEvent, setSelectedEvent] = useState<LabeledEventResponse | null>(null);
-  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
 
   const fetchLabeledEvents = async (page: number = 1) => {
     setLoading(true);
     try {
-      const filters: LabeledEventFilter = {
+      const filters: LabeledEventFilter & { type?: number[] } = {
         page,
         limit: 10,
         deviceId: deviceFilter || undefined,
         labeledBy: labeledByFilter || undefined,
+        detectionType: detectionTypeFilter && detectionTypeFilter !== 'all' ? detectionTypeFilter : undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
         sort: 'labeledAt',
         order: 'desc',
+        type: eventType.length > 0 ? eventType.map(Number) : undefined,
       };
 
-      const response = await getLabeledEvents(filters);
-
+      const response = await getManuallyLabeledEvents(filters);
       let filteredEvents = response.data || [];
 
-      // Apply search filter
       if (searchTerm) {
         filteredEvents = filteredEvents.filter(event => 
           event.details.channel_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           event.deviceId.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (event.labeledBy && event.labeledBy.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          event.details.labels?.some(label => label.toLowerCase().includes(searchTerm.toLowerCase()))
+          event.detectionType.toLowerCase().includes(searchTerm.toLowerCase())
         );
       }
 
@@ -58,7 +63,7 @@ export default function LabeledDataTablePage() {
       setTotalPages(response.pagination.pages);
       setCurrentPage(response.pagination.page);
     } catch (error) {
-      console.log(error);
+      console.error(error);
       // toast({
       //   title: "Error",
       //   description: error instanceof Error ? error.message : "Failed to fetch labeled events",
@@ -71,25 +76,57 @@ export default function LabeledDataTablePage() {
 
   useEffect(() => {
     fetchLabeledEvents(1);
-  }, [deviceFilter, labeledByFilter]);
+  }, [deviceFilter, labeledByFilter, detectionTypeFilter, startDate, endDate, eventType]);
 
   const handleSearch = () => {
     fetchLabeledEvents(1);
   };
 
+  // const getEventTypeColor = (type: number) => {
+  //   switch (type) {
+  //     case 29: return 'bg-green-100 text-green-800';
+  //     case 33: return 'bg-yellow-100 text-yellow-800';
+  //     default: return 'bg-gray-100 text-gray-800';
+  //   }
+  // };
+
+  // const getEventTypeLabel = (type: number) => {
+  //   switch (type) {
+  //     case 29: return 'Recognized';
+  //     case 33: return 'Unrecognized';
+  //     default: return 'Unknown';
+  //   }
+  // };
+
+  const getDetailsSummary = (event: LabeledEventResponse) => {
+    const { details, detectionType } = event;
+    switch (detectionType) {
+      case 'break advertisements':
+      case 'sponsor advertisements':
+      case 'overlays advertisements':
+        return `Brand: ${details.brand || 'N/A'}, Advertiser: ${details.advertiser || 'N/A'}`;
+      case 'program':
+        return `Program: ${details.programName || 'N/A'}, Genre: ${details.genre || 'N/A'}`;
+      case 'song':
+        return `Song: ${details.name || 'N/A'}, Artist: ${details.artist || 'N/A'}`;
+      case 'error':
+        return `Error: ${details.errorOrMissingData || 'N/A'}`;
+      case 'channel jingle':
+        return `Jingle: ${details.channelJingle || 'N/A'}`;
+      default:
+        return 'No details';
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Labeled Data</h1>
         <div className="flex items-center gap-2">
-          <Badge variant="outline">
-            Total: {labeledEvents.length}
-          </Badge>
+          <Badge variant="outline">Total: {labeledEvents.length}</Badge>
         </div>
       </div>
 
-      {/* Filters */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -98,7 +135,7 @@ export default function LabeledDataTablePage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div>
               <Label htmlFor="deviceFilter">Device ID</Label>
               <Input
@@ -118,10 +155,64 @@ export default function LabeledDataTablePage() {
               />
             </div>
             <div>
+              <Label htmlFor="detectionTypeFilter">Detection Type</Label>
+              <Select
+                value={detectionTypeFilter}
+                onValueChange={setDetectionTypeFilter}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select detection type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="break advertisements">Break Advertisements</SelectItem>
+                  <SelectItem value="sponsor advertisements">Sponsor Advertisements</SelectItem>
+                  <SelectItem value="overlays advertisements">Overlays Advertisements</SelectItem>
+                  <SelectItem value="program">Program</SelectItem>
+                  <SelectItem value="song">Song</SelectItem>
+                  <SelectItem value="error">Error</SelectItem>
+                  <SelectItem value="channel jingle">Channel Jingle</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="startDate">Start Date</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="endDate">End Date</Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="eventType">Event Type</Label>
+              <Select
+                value={eventType.join(',')}
+                onValueChange={(value) => setEventType(value ? value.split(',') : [])}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select event type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="29">Recognized</SelectItem>
+                  <SelectItem value="33">Unrecognized</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label htmlFor="searchTerm">Search</Label>
               <Input
                 id="searchTerm"
-                placeholder="Search channel, device, labels..."
+                placeholder="Search channel, device, labeled by..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -136,7 +227,6 @@ export default function LabeledDataTablePage() {
         </CardContent>
       </Card>
 
-      {/* Data Table */}
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin" />
@@ -150,9 +240,11 @@ export default function LabeledDataTablePage() {
                   <TableHead>Event ID</TableHead>
                   <TableHead>Device ID</TableHead>
                   <TableHead>Channel</TableHead>
-                  <TableHead>Labels</TableHead>
+                  <TableHead>Detection Type</TableHead>
+                  <TableHead>Details</TableHead>
                   <TableHead>Labeled By</TableHead>
-                  <TableHead>Labeled At</TableHead>
+                  <TableHead>Time Range</TableHead>
+                  <TableHead>Images</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -162,29 +254,87 @@ export default function LabeledDataTablePage() {
                     <TableCell>{event.id}</TableCell>
                     <TableCell>{event.deviceId}</TableCell>
                     <TableCell>{event.details.channel_name}</TableCell>
-                    <TableCell>
-                      {event.details.labels?.map((label, index) => (
-                        <Badge key={index} variant="outline" className="mr-1">
-                          {label}
-                        </Badge>
-                      ))}
-                    </TableCell>
+                    <TableCell>{event.detectionType}</TableCell>
+                    <TableCell>{getDetailsSummary(event)}</TableCell>
                     <TableCell>{event.labeledBy || 'N/A'}</TableCell>
                     <TableCell>
-                      {new Date(event.labeledAt).toLocaleString()}
+                      {new Date(parseInt(event.timestampStart || event.timestamp) * 1000).toLocaleString()} - 
+                      {new Date(parseInt(event.timestampEnd || event.timestamp) * 1000).toLocaleString()}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedEvent(event);
-                          setIsDetailsDialogOpen(true);
-                        }}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View
-                      </Button>
+                      {(event.images || []).length} image{(event.images || []).length !== 1 ? 's' : ''}
+                    </TableCell>
+                    <TableCell>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Eye className="h-4 w-4 mr-2" />
+                            View
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-3xl">
+                          <DialogHeader>
+                            <DialogTitle>Labeled Event Details</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div><strong>Event ID:</strong> {event.id}</div>
+                              <div><strong>Device:</strong> {event.deviceId}</div>
+                              <div><strong>Original Event ID:</strong> {event.originalEventId}</div>
+                              <div><strong>Channel:</strong> {event.details.channel_name}</div>
+                              <div><strong>Detection Type:</strong> {event.detectionType}</div>
+                              <div><strong>Labeled By:</strong> {event.labeledBy || 'N/A'}</div>
+                              <div><strong>Time Range:</strong> 
+                                {new Date(parseInt(event.timestampStart || event.timestamp) * 1000).toLocaleString()} - 
+                                {new Date(parseInt(event.timestampEnd || event.timestamp) * 1000).toLocaleString()}
+                              </div>
+                              <div><strong>Labeled At:</strong> {new Date(event.labeledAt).toLocaleString()}</div>
+                              {event.detectionType === 'break advertisements' || 
+                               event.detectionType === 'sponsor advertisements' || 
+                               event.detectionType === 'overlays advertisements' ? (
+                                <>
+                                  <div><strong>Brand:</strong> {event.details.brand || 'N/A'}</div>
+                                  <div><strong>Advertiser:</strong> {event.details.advertiser || 'N/A'}</div>
+                                  <div><strong>Industry:</strong> {event.details.industry || 'N/A'}</div>
+                                  <div><strong>Category:</strong> {event.details.category || 'N/A'}</div>
+                                  <div><strong>Sector:</strong> {event.details.sector || 'N/A'}</div>
+                                </>
+                              ) : event.detectionType === 'program' ? (
+                                <>
+                                  <div><strong>Program Name:</strong> {event.details.programName || 'N/A'}</div>
+                                  <div><strong>Genre:</strong> {event.details.genre || 'N/A'}</div>
+                                </>
+                              ) : event.detectionType === 'song' ? (
+                                <>
+                                  <div><strong>Song Name:</strong> {event.details.name || 'N/A'}</div>
+                                  <div><strong>Artist:</strong> {event.details.artist || 'N/A'}</div>
+                                  <div><strong>Release Year:</strong> {event.details.releaseYear || 'N/A'}</div>
+                                  <div><strong>Album/Movie:</strong> {event.details.albumOrMovie || 'N/A'}</div>
+                                  <div><strong>Language:</strong> {event.details.language || 'N/A'}</div>
+                                </>
+                              ) : event.detectionType === 'error' ? (
+                                <div><strong>Error:</strong> {event.details.errorOrMissingData || 'N/A'}</div>
+                              ) : event.detectionType === 'channel jingle' ? (
+                                <div><strong>Channel Jingle:</strong> {event.details.channelJingle || 'N/A'}</div>
+                              ) : null}
+                            </div>
+                            <div>
+                              <strong>Images:</strong>
+                              <div className="grid grid-cols-2 gap-4 mt-2">
+                                {(event.images || []).map((image, index) => (
+                                  <img
+                                    key={index}
+                                    src={image}
+                                    alt={`Event image ${index + 1}`}
+                                    className="w-full max-h-48 object-contain rounded-lg"
+                                    onError={(e) => { e.currentTarget.src = '/placeholder-image.png'; }}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -194,7 +344,6 @@ export default function LabeledDataTablePage() {
         </Card>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center gap-2">
           <Button
@@ -216,49 +365,6 @@ export default function LabeledDataTablePage() {
           </Button>
         </div>
       )}
-
-      {/* Details Dialog */}
-      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Labeled Event Details</DialogTitle>
-          </DialogHeader>
-          {selectedEvent && (
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                <img
-                  src={selectedEvent.details.image_path}
-                  alt={`Event ${selectedEvent.id}`}
-                  className="max-h-64 object-contain rounded-lg"
-                  onError={(e) => {
-                    e.currentTarget.src = '/placeholder-image.png';
-                  }}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><strong>Event ID:</strong> {selectedEvent.id}</div>
-                <div><strong>Original Event ID:</strong> {selectedEvent.originalEventId}</div>
-                <div><strong>Device:</strong> {selectedEvent.deviceId}</div>
-                <div><strong>Channel:</strong> {selectedEvent.details.channel_name}</div>
-                <div><strong>Score:</strong> {selectedEvent.details.score}</div>
-                <div><strong>Labeled By:</strong> {selectedEvent.labeledBy || 'N/A'}</div>
-                <div><strong>Labeled At:</strong> {new Date(selectedEvent.labeledAt).toLocaleString()}</div>
-                <div><strong>Timestamp:</strong> {new Date(parseInt(selectedEvent.timestamp) * 1000).toLocaleString()}</div>
-                <div className="col-span-2">
-                  <strong>Labels:</strong>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {selectedEvent.details.labels?.map((label, index) => (
-                      <Badge key={index} variant="outline">
-                        {label}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

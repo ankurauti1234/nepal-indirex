@@ -51,27 +51,28 @@ export const ProgramBlock = ({
     }
   > = {
     program: {
-      bgColor: "bg-blue-500/50",
-      borderColor: "border-blue-500",
-      hoverColor: "hover:bg-blue-500/75",
+      bgColor: "bg-blue-500",
+      borderColor: "border-blue-600",
+      hoverColor: "hover:bg-blue-800",
       badgeText: "Program",
-      badgeColor: "bg-blue-500",
+      badgeColor: "bg-blue-700",
     },
     ad: {
-      bgColor: "bg-amber-500/50",
-      borderColor: "border-amber-500",
-      hoverColor: "hover:bg-amber-500/75",
+      bgColor: "bg-amber-500",
+      borderColor: "border-amber-600",
+      hoverColor: "hover:bg-amber-800",
       badgeText: "Ad",
-      badgeColor: "bg-amber-500",
+      badgeColor: "bg-amber-700",
     },
     not_detected: {
-      bgColor: "bg-gray-500/50",
-      borderColor: "border-gray-500",
-      hoverColor: "hover:bg-gray-500/75",
+      bgColor: "bg-gray-500",
+      borderColor: "border-gray-600",
+      hoverColor: "hover:bg-gray-800",
       badgeText: "Not Detected",
-      badgeColor: "bg-gray-500",
+      badgeColor: "bg-gray-700",
     },
   };
+
 
   const config = typeConfig[type];
   const duration = calculateDuration(startTime, endTime);

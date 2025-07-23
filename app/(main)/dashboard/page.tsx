@@ -1,16 +1,18 @@
-import React from "react";
+'use client'
+import { logout } from "@/services/auth.service";
+import { Button } from "@/components/ui/button";
 
-const page = () => {
+export default function Dashboard() {
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/login";
+  };
+
   return (
-    <div className="flex flex-1 flex-col gap-4">
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-      </div>
-      <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <p>Welcome to your dashboard!</p>
+      <Button onClick={handleLogout}>Logout</Button>
     </div>
   );
-};
-
-export default page;
+}
