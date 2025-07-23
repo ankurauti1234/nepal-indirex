@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @next/next/no-img-element */
 'use client';
@@ -17,6 +18,7 @@ import {
   LabeledEventResponse, 
   LabeledEventFilter,
 } from '@/services/stream.service';
+import { format } from 'date-fns';
 
 export default function LabeledDataTablePage() {
   const [labeledEvents, setLabeledEvents] = useState<LabeledEventResponse[]>([]);
@@ -26,25 +28,25 @@ export default function LabeledDataTablePage() {
   const [deviceFilter, setDeviceFilter] = useState('');
   const [labeledByFilter, setLabeledByFilter] = useState('');
   const [detectionTypeFilter, setDetectionTypeFilter] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [eventType, setEventType] = useState<string[]>([]);
+  const [date, setDate] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
   const fetchLabeledEvents = async (page: number = 1) => {
     setLoading(true);
     try {
-      const filters: LabeledEventFilter & { type?: number[] } = {
+      const filters: LabeledEventFilter = {
         page,
         limit: 10,
         deviceId: deviceFilter || undefined,
         labeledBy: labeledByFilter || undefined,
         detectionType: detectionTypeFilter && detectionTypeFilter !== 'all' ? detectionTypeFilter : undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        date: date || undefined,
+        startTime: startTime || undefined,
+        endTime: endTime || undefined,
         sort: 'labeledAt',
         order: 'desc',
-        type: eventType.length > 0 ? eventType.map(Number) : undefined,
       };
 
       const response = await getManuallyLabeledEvents(filters);
@@ -52,7 +54,9 @@ export default function LabeledDataTablePage() {
 
       if (searchTerm) {
         filteredEvents = filteredEvents.filter(event => 
-          event.details.channel_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (typeof event.details === 'object' && 'channel_name' in event.details && typeof event.details.channel_name === 'string'
+            ? event.details.channel_name.toLowerCase().includes(searchTerm.toLowerCase())
+            : false) ||
           event.deviceId.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (event.labeledBy && event.labeledBy.toLowerCase().includes(searchTerm.toLowerCase())) ||
           event.detectionType.toLowerCase().includes(searchTerm.toLowerCase())
@@ -64,11 +68,6 @@ export default function LabeledDataTablePage() {
       setCurrentPage(response.pagination.page);
     } catch (error) {
       console.error(error);
-      // toast({
-      //   title: "Error",
-      //   description: error instanceof Error ? error.message : "Failed to fetch labeled events",
-      //   variant: "destructive",
-      // });
     } finally {
       setLoading(false);
     }
@@ -76,46 +75,52 @@ export default function LabeledDataTablePage() {
 
   useEffect(() => {
     fetchLabeledEvents(1);
-  }, [deviceFilter, labeledByFilter, detectionTypeFilter, startDate, endDate, eventType]);
+  }, [deviceFilter, labeledByFilter, detectionTypeFilter, date, startTime, endTime]);
 
   const handleSearch = () => {
     fetchLabeledEvents(1);
   };
 
-  // const getEventTypeColor = (type: number) => {
-  //   switch (type) {
-  //     case 29: return 'bg-green-100 text-green-800';
-  //     case 33: return 'bg-yellow-100 text-yellow-800';
-  //     default: return 'bg-gray-100 text-gray-800';
-  //   }
-  // };
-
-  // const getEventTypeLabel = (type: number) => {
-  //   switch (type) {
-  //     case 29: return 'Recognized';
-  //     case 33: return 'Unrecognized';
-  //     default: return 'Unknown';
-  //   }
-  // };
+  const handleReset = () => {
+    setDeviceFilter('');
+    setLabeledByFilter('');
+    setDetectionTypeFilter('');
+    setDate('');
+    setStartTime('');
+    setEndTime('');
+    setSearchTerm('');
+    fetchLabeledEvents(1);
+  };
 
   const getDetailsSummary = (event: LabeledEventResponse) => {
     const { details, detectionType } = event;
     switch (detectionType) {
-      case 'break advertisements':
-      case 'sponsor advertisements':
-      case 'overlays advertisements':
-        return `Brand: ${details.brand || 'N/A'}, Advertiser: ${details.advertiser || 'N/A'}`;
-      case 'program':
-        return `Program: ${details.programName || 'N/A'}, Genre: ${details.genre || 'N/A'}`;
-      case 'song':
-        return `Song: ${details.name || 'N/A'}, Artist: ${details.artist || 'N/A'}`;
-      case 'error':
-        return `Error: ${details.errorOrMissingData || 'N/A'}`;
-      case 'channel jingle':
-        return `Jingle: ${details.channelJingle || 'N/A'}`;
+      case 'Commercial Break':
+        return `Duration: ${typeof details === 'object' && 'duration' in details ? (details as any).duration || 'N/A' : 'N/A'} seconds`;
+      case 'Spots outside breaks':
+        return `Format: ${typeof details === 'object' && 'formatType' in details ? (details as any).formatType || 'N/A' : 'N/A'}`;
+      case 'Auto-promo':
+        return `Content: ${typeof details === 'object' && 'contentType' in details ? (details as any).contentType || 'N/A' : 'N/A'}`;
+      case 'Program Content':
+        if (typeof details === 'object' && details !== null && 'description' in details && 'contentType' in details) {
+          return `Program: ${(details as any).description || 'N/A'}, Type: ${(details as any).contentType || 'N/A'}`;
+        }
+        return 'No details';
+      case 'Song':
+        if (typeof details === 'object' && details !== null && 'songName' in details && 'artistName' in details) {
+          return `Song: ${(details as any).songName || 'N/A'}, Artist: ${(details as any).artistName || 'N/A'}`;
+        }
+        return 'No details';
+      case 'Error':
+        return `Error: ${typeof details === 'object' && details !== null && 'errorType' in details ? (details as any).errorType || 'N/A' : 'N/A'}`;
       default:
         return 'No details';
     }
+  };
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(parseInt(timestamp) * 1000);
+    return format(date, 'MM/dd/yyyy hh:mm:ss a');
   };
 
   return (
@@ -165,48 +170,41 @@ export default function LabeledDataTablePage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="break advertisements">Break Advertisements</SelectItem>
-                  <SelectItem value="sponsor advertisements">Sponsor Advertisements</SelectItem>
-                  <SelectItem value="overlays advertisements">Overlays Advertisements</SelectItem>
-                  <SelectItem value="program">Program</SelectItem>
-                  <SelectItem value="song">Song</SelectItem>
-                  <SelectItem value="error">Error</SelectItem>
-                  <SelectItem value="channel jingle">Channel Jingle</SelectItem>
+                  <SelectItem value="Program Content">Program Content</SelectItem>
+                  <SelectItem value="Commercial Break">Commercial Break</SelectItem>
+                  <SelectItem value="Spots outside breaks">Spots outside breaks</SelectItem>
+                  <SelectItem value="Auto-promo">Auto-promo</SelectItem>
+                  <SelectItem value="Song">Song</SelectItem>
+                  <SelectItem value="Error">Error</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label htmlFor="startDate">Start Date</Label>
+              <Label htmlFor="date">Date</Label>
               <Input
-                id="startDate"
+                id="date"
                 type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
               />
             </div>
             <div>
-              <Label htmlFor="endDate">End Date</Label>
+              <Label htmlFor="startTime">Start Time</Label>
               <Input
-                id="endDate"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                id="startTime"
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
               />
             </div>
             <div>
-              <Label htmlFor="eventType">Event Type</Label>
-              <Select
-                value={eventType.join(',')}
-                onValueChange={(value) => setEventType(value ? value.split(',') : [])}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select event type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="29">Recognized</SelectItem>
-                  <SelectItem value="33">Unrecognized</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="endTime">End Time</Label>
+              <Input
+                id="endTime"
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              />
             </div>
             <div>
               <Label htmlFor="searchTerm">Search</Label>
@@ -217,10 +215,13 @@ export default function LabeledDataTablePage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="flex items-end">
+            <div className="flex items-end gap-2">
               <Button onClick={handleSearch} className="w-full">
                 <Search className="h-4 w-4 mr-2" />
                 Search
+              </Button>
+              <Button onClick={handleReset} variant="outline" className="w-full">
+                Reset
               </Button>
             </div>
           </div>
@@ -253,16 +254,20 @@ export default function LabeledDataTablePage() {
                   <TableRow key={event.id}>
                     <TableCell>{event.id}</TableCell>
                     <TableCell>{event.deviceId}</TableCell>
-                    <TableCell>{event.details.channel_name}</TableCell>
+                    <TableCell>
+                      {'channel_name' in event.details && typeof event.details.channel_name === 'string'
+                        ? event.details.channel_name
+                        : 'N/A'}
+                    </TableCell>
                     <TableCell>{event.detectionType}</TableCell>
                     <TableCell>{getDetailsSummary(event)}</TableCell>
-                    <TableCell>{event.labeledBy || 'N/A'}</TableCell>
+                    <TableCell>{event.labeledBy ?? 'N/A'}</TableCell>
                     <TableCell>
-                      {new Date(parseInt(event.timestampStart || event.timestamp) * 1000).toLocaleString()} - 
-                      {new Date(parseInt(event.timestampEnd || event.timestamp) * 1000).toLocaleString()}
+                      {formatTimestamp(event.timestampStart ?? event.timestamp)} - 
+                      {formatTimestamp(event.timestampEnd ?? event.timestamp)}
                     </TableCell>
                     <TableCell>
-                      {(event.images || []).length} image{(event.images || []).length !== 1 ? 's' : ''}
+                      {(event.images ?? []).length} image{(event.images ?? []).length !== 1 ? 's' : ''}
                     </TableCell>
                     <TableCell>
                       <Dialog>
@@ -281,47 +286,55 @@ export default function LabeledDataTablePage() {
                               <div><strong>Event ID:</strong> {event.id}</div>
                               <div><strong>Device:</strong> {event.deviceId}</div>
                               <div><strong>Original Event ID:</strong> {event.originalEventId}</div>
-                              <div><strong>Channel:</strong> {event.details.channel_name}</div>
-                              <div><strong>Detection Type:</strong> {event.detectionType}</div>
-                              <div><strong>Labeled By:</strong> {event.labeledBy || 'N/A'}</div>
-                              <div><strong>Time Range:</strong> 
-                                {new Date(parseInt(event.timestampStart || event.timestamp) * 1000).toLocaleString()} - 
-                                {new Date(parseInt(event.timestampEnd || event.timestamp) * 1000).toLocaleString()}
+                              <div>
+                                <strong>Channel:</strong>{' '}
+                                {'channel_name' in event.details && typeof event.details.channel_name === 'string'
+                                  ? event.details.channel_name
+                                  : 'N/A'}
                               </div>
-                              <div><strong>Labeled At:</strong> {new Date(event.labeledAt).toLocaleString()}</div>
-                              {event.detectionType === 'break advertisements' || 
-                               event.detectionType === 'sponsor advertisements' || 
-                               event.detectionType === 'overlays advertisements' ? (
+                              <div><strong>Detection Type:</strong> {event.detectionType}</div>
+                              <div><strong>Labeled By:</strong> {event.labeledBy ?? 'N/A'}</div>
+                              <div><strong>Time Range:</strong> 
+                                {formatTimestamp(event.timestampStart ?? event.timestamp)} - 
+                                {formatTimestamp(event.timestampEnd ?? event.timestamp)}
+                              </div>
+                              <div><strong>Labeled At:</strong> {format(new Date(event.labeledAt), 'MM/dd/yyyy hh:mm:ss a')}</div>
+                              {event.detectionType === 'Program Content' ? (
                                 <>
-                                  <div><strong>Brand:</strong> {event.details.brand || 'N/A'}</div>
-                                  <div><strong>Advertiser:</strong> {event.details.advertiser || 'N/A'}</div>
-                                  <div><strong>Industry:</strong> {event.details.industry || 'N/A'}</div>
-                                  <div><strong>Category:</strong> {event.details.category || 'N/A'}</div>
-                                  <div><strong>Sector:</strong> {event.details.sector || 'N/A'}</div>
+                                  <div><strong>Description:</strong> {'description' in event.details ? (event.details as any).description ?? 'N/A' : 'N/A'}</div>
+                                  <div><strong>Format Type:</strong> {'formatType' in event.details ? (event.details as any).formatType ?? 'N/A' : 'N/A'}</div>
+                                  <div><strong>Content Type:</strong> {'contentType' in event.details ? (event.details as any).contentType ?? 'N/A' : 'N/A'}</div>
+                                  <div><strong>Episode ID:</strong> {event.episodeId ?? 'N/A'}</div>
+                                  <div><strong>Season ID:</strong> {event.seasonId ?? 'N/A'}</div>
                                 </>
-                              ) : event.detectionType === 'program' ? (
-                                <>
-                                  <div><strong>Program Name:</strong> {event.details.programName || 'N/A'}</div>
-                                  <div><strong>Genre:</strong> {event.details.genre || 'N/A'}</div>
-                                </>
-                              ) : event.detectionType === 'song' ? (
-                                <>
-                                  <div><strong>Song Name:</strong> {event.details.name || 'N/A'}</div>
-                                  <div><strong>Artist:</strong> {event.details.artist || 'N/A'}</div>
-                                  <div><strong>Release Year:</strong> {event.details.releaseYear || 'N/A'}</div>
-                                  <div><strong>Album/Movie:</strong> {event.details.albumOrMovie || 'N/A'}</div>
-                                  <div><strong>Language:</strong> {event.details.language || 'N/A'}</div>
-                                </>
-                              ) : event.detectionType === 'error' ? (
-                                <div><strong>Error:</strong> {event.details.errorOrMissingData || 'N/A'}</div>
-                              ) : event.detectionType === 'channel jingle' ? (
-                                <div><strong>Channel Jingle:</strong> {event.details.channelJingle || 'N/A'}</div>
+                              ) : event.detectionType === 'Commercial Break' ? (
+                                <div><strong>Duration:</strong> {'duration' in event.details ? (event.details as any).duration ?? 'N/A' : 'N/A'} seconds</div>
+                              ) : event.detectionType === 'Spots outside breaks' ? (
+                                <div><strong>Format Type:</strong> {'formatType' in event.details ? (event.details as any).formatType ?? 'N/A' : 'N/A'}</div>
+                              ) : event.detectionType === 'Auto-promo' ? (
+                                <div><strong>Content Type:</strong> {'contentType' in event.details ? (event.details as any).contentType ?? 'N/A' : 'N/A'}</div>
+                              ) : event.detectionType === 'Song' ? (
+                                (() => {
+                                  const details = event.details as Partial<Record<string, unknown>> & { songName?: string, artistName?: string, yearOfPublication?: string, movieNameOrAlbumName?: string, genre?: string, tempo?: string };
+                                  return (
+                                    <>
+                                      <div><strong>Song Name:</strong> {typeof details.songName === 'string' ? details.songName : 'N/A'}</div>
+                                      <div><strong>Artist:</strong> {typeof details.artistName === 'string' ? details.artistName : 'N/A'}</div>
+                                      <div><strong>Year:</strong> {typeof details.yearOfPublication === 'string' ? details.yearOfPublication : 'N/A'}</div>
+                                      <div><strong>Album/Movie:</strong> {typeof details.movieNameOrAlbumName === 'string' ? details.movieNameOrAlbumName : 'N/A'}</div>
+                                      <div><strong>Genre:</strong> {typeof details.genre === 'string' ? details.genre : 'N/A'}</div>
+                                      <div><strong>Tempo:</strong> {typeof details.tempo === 'string' ? details.tempo : 'N/A'}</div>
+                                    </>
+                                  );
+                                })()
+                              ) : event.detectionType === 'Error' ? (
+                                <div><strong>Error Type:</strong> {'errorType' in event.details ? (event.details as any).errorType ?? 'N/A' : 'N/A'}</div>
                               ) : null}
                             </div>
                             <div>
                               <strong>Images:</strong>
                               <div className="grid grid-cols-2 gap-4 mt-2">
-                                {(event.images || []).map((image, index) => (
+                                {(event.images ?? []).map((image, index) => (
                                   <img
                                     key={index}
                                     src={image}

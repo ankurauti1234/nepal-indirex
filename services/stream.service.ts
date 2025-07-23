@@ -100,6 +100,8 @@ export interface ImageEventResponse {
 }
 
 export interface LabeledEventResponse {
+  timestampEnd: string;
+  timestampStart: string;
   id: number;
   deviceId: string;
   originalEventId: number;
