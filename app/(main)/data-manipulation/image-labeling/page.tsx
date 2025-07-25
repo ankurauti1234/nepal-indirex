@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Eye, Tag, Search } from 'lucide-react';
+import { Loader2, Tag, Search } from 'lucide-react';
 import {
   getEvents,
   labelEvent,
@@ -437,7 +437,7 @@ export default function ImageLabelingPage() {
                   <TableHead>Date</TableHead>
                   <TableHead>Time</TableHead>
                   <TableHead>Duration</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>Image</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -464,10 +464,8 @@ export default function ImageLabelingPage() {
                     <TableCell>
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4 mr-2" />
-                            View
-                          </Button>
+                            <img src={event.details.image_path} alt={`Event ${event.id}`} className="w-12 h-12 rounded" onError={(e) => { e.currentTarget.src = '/placeholder-image.png'; }} />
+                          
                         </DialogTrigger>
                         <DialogContent className="max-w-2xl">
                           <DialogHeader>

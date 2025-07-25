@@ -42,10 +42,6 @@ const navMainItems = [
         title: "Live Stream Table",
         url: "/streams/live-stream-table",
       },
-      {
-        title: "Program Grid",
-        url: "/streams/program-grid",
-      },
     ],
   },
   {
