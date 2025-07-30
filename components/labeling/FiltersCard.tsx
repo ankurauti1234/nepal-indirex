@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -50,10 +51,12 @@ export default function FiltersCard({
   useEffect(() => {
     const storedDeviceId = localStorage.getItem("deviceId") || "UNKNOWN";
     setIsUnknownDevice(storedDeviceId === "UNKNOWN");
-    if (deviceFilter !== storedDeviceId) {
+    if (storedDeviceId === "UNKNOWN" && deviceFilter !== "") {
+      setDeviceFilter("");
+    } else if (storedDeviceId !== "UNKNOWN" && deviceFilter !== storedDeviceId) {
       setDeviceFilter(storedDeviceId);
     }
-  }, [deviceFilter, setDeviceFilter]);
+  }, [setDeviceFilter]);
 
   return (
     <Card>
@@ -65,27 +68,17 @@ export default function FiltersCard({
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-          {isUnknownDevice ? (
-            <div>
-              <Label htmlFor="deviceSearch">Search Device ID</Label>
-              <Input
-                id="deviceSearch"
-                placeholder="e.g., R-1002"
-                value={deviceFilter}
-                onChange={(e) => setDeviceFilter(e.target.value)}
-              />
-            </div>
-          ) : (
-            <div>
-              <Label htmlFor="deviceFilter">Device ID</Label>
-              <Input
-                id="deviceFilter"
-                value={deviceFilter}
-                readOnly
-                className="cursor-not-allowed"
-              />
-            </div>
-          )}
+          <div>
+            <Label htmlFor="deviceSearch">Device ID</Label>
+            <Input
+              id="deviceSearch"
+              placeholder={isUnknownDevice ? "e.g., R-1002" : ""}
+              value={deviceFilter}
+              onChange={(e) => setDeviceFilter(e.target.value)}
+              readOnly={!isUnknownDevice}
+              className={isUnknownDevice ? "" : "cursor-not-allowed"}
+            />
+          </div>
 
           <div>
             <Label htmlFor="date">Date</Label>

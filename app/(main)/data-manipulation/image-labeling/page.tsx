@@ -30,8 +30,10 @@ function ImageLabelingContent() {
   const [totalPages, setTotalPages] = useState(1);
   const [deviceFilter, setDeviceFilter] = useState(
     typeof window !== "undefined"
-      ? localStorage.getItem("deviceId") || "UNKNOWN"
-      : "UNKNOWN"
+      ? localStorage.getItem("deviceId") === "UNKNOWN"
+        ? ""
+        : localStorage.getItem("deviceId") || ""
+      : ""
   );
   const [date, setDate] = useState(searchParams.get("date") || "");
   const [startTime, setStartTime] = useState(searchParams.get("startTime") || "");

@@ -1,11 +1,26 @@
 import { useState, useMemo } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-import { labelEvent, LabelEventRequest, ProgramContentDetails } from "@/services/stream.service";
+import {
+  labelEvent,
+  LabelEventRequest,
+  ProgramContentDetails,
+} from "@/services/stream.service";
 import brandsData from "./brands.json";
 import { Brand } from "./types";
 
@@ -54,17 +69,32 @@ export default function LabelDialog({
 }: LabelDialogProps) {
   const [labeling, setLabeling] = useState(false);
   const [detectionType, setDetectionType] = useState<
-    "Program Content" | "Commercial Break" | "Spots outside breaks" | "Auto-promo" | "Song" | "Error"
+    | "Program Content"
+    | "Commercial Break"
+    | "Spots outside breaks"
+    | "Auto-promo"
+    | "Song"
+    | "Error"
   >("Program Content");
   const [title, setTitle] = useState("");
   const [programDescription, setProgramDescription] = useState("");
-  const [programFormatType, setProgramFormatType] = useState<ProgramFormatType | "">("");
-  const [programContentType, setProgramContentType] = useState<ProgramContentType | "">("");
-  const [spotsFormatType, setSpotsFormatType] = useState<SpotsFormatType | "">("");
-  const [autoPromoContentType, setAutoPromoContentType] = useState<AutoPromoContentType | "">("");
+  const [programFormatType, setProgramFormatType] = useState<
+    ProgramFormatType | ""
+  >("");
+  const [programContentType, setProgramContentType] = useState<
+    ProgramContentType | ""
+  >("");
+  const [spotsFormatType, setSpotsFormatType] = useState<SpotsFormatType | "">(
+    ""
+  );
+  const [autoPromoContentType, setAutoPromoContentType] = useState<
+    AutoPromoContentType | ""
+  >("");
   const [songName, setSongName] = useState("");
   const [artistName, setArtistName] = useState("");
-  const [errorType, setErrorType] = useState<"Signal Lost" | "Blank Image" | "">("");
+  const [errorType, setErrorType] = useState<
+    "Signal Lost" | "Blank Image" | ""
+  >("");
   const [selectedBrand, setSelectedBrand] = useState("");
   const [selectedProduct, setSelectedProduct] = useState("");
   const [category, setCategory] = useState("");
@@ -103,9 +133,13 @@ export default function LabelDialog({
 
   const handleProductChange = (productName: string) => {
     setSelectedProduct(productName);
-    const selectedBrandData = typedBrandsData.find((brand) => brand.name === selectedBrand);
+    const selectedBrandData = typedBrandsData.find(
+      (brand) => brand.name === selectedBrand
+    );
     if (selectedBrandData) {
-      const product = selectedBrandData.products.find((p: { name: string; }) => p.name === productName);
+      const product = selectedBrandData.products.find(
+        (p: { name: string }) => p.name === productName
+      );
       if (product) {
         setCategory(product.category);
         setSector(product.sector);
@@ -143,7 +177,9 @@ export default function LabelDialog({
       return;
     }
     if (
-      ["Commercial Break", "Spots outside breaks", "Auto-promo"].includes(detectionType) &&
+      ["Commercial Break", "Spots outside breaks", "Auto-promo"].includes(
+        detectionType
+      ) &&
       !title
     ) {
       return;
@@ -162,8 +198,10 @@ export default function LabelDialog({
           ? {
               programContentDetails: {
                 description: programDescription,
-                formatType: programFormatType as ProgramContentDetails["formatType"],
-                contentType: programContentType as ProgramContentDetails["contentType"],
+                formatType:
+                  programFormatType as ProgramContentDetails["formatType"],
+                contentType:
+                  programContentType as ProgramContentDetails["contentType"],
               },
             }
           : {}),
@@ -223,28 +261,43 @@ export default function LabelDialog({
             <Label htmlFor="detectionType">Detection Type</Label>
             <Select
               value={detectionType}
-              onValueChange={(value: "Program Content" | "Commercial Break" | "Spots outside breaks" | "Auto-promo" | "Song" | "Error") =>
-                setDetectionType(value)
-              }
+              onValueChange={(
+                value:
+                  | "Program Content"
+                  | "Commercial Break"
+                  | "Spots outside breaks"
+                  | "Auto-promo"
+                  | "Song"
+                  | "Error"
+              ) => setDetectionType(value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select detection type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Program Content">Program Content</SelectItem>
-                <SelectItem value="Commercial Break">Commercial Break</SelectItem>
-                <SelectItem value="Spots outside breaks">Spots outside breaks</SelectItem>
+                <SelectItem value="Commercial Break">
+                  Commercial Break
+                </SelectItem>
+                <SelectItem value="Spots outside breaks">
+                  Spots outside breaks
+                </SelectItem>
                 <SelectItem value="Auto-promo">Auto-promo</SelectItem>
                 <SelectItem value="Song">Song</SelectItem>
                 <SelectItem value="Error">Error</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          {["Commercial Break", "Spots outside breaks", "Auto-promo"].includes(detectionType) ? (
+          {["Commercial Break", "Spots outside breaks", "Auto-promo"].includes(
+            detectionType
+          ) ? (
             <>
               <div>
                 <Label htmlFor="brand">Brand</Label>
-                <Select value={isCustomBrand ? "custom" : selectedBrand} onValueChange={handleBrandChange}>
+                <Select
+                  value={isCustomBrand ? "custom" : selectedBrand}
+                  onValueChange={handleBrandChange}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select brand" />
                   </SelectTrigger>
@@ -301,7 +354,10 @@ export default function LabelDialog({
                   <>
                     <div>
                       <Label htmlFor="product">Product</Label>
-                      <Select value={selectedProduct} onValueChange={handleProductChange}>
+                      <Select
+                        value={selectedProduct}
+                        onValueChange={handleProductChange}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select product" />
                         </SelectTrigger>
@@ -309,7 +365,10 @@ export default function LabelDialog({
                           {typedBrandsData
                             .find((brand) => brand.name === selectedBrand)
                             ?.products.map((product) => (
-                              <SelectItem key={product.name} value={product.name}>
+                              <SelectItem
+                                key={product.name}
+                                value={product.name}
+                              >
                                 {product.name}
                               </SelectItem>
                             ))}
@@ -329,15 +388,17 @@ export default function LabelDialog({
               )}
             </>
           ) : (
-            <div>
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                placeholder="Enter title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
+            detectionType !== "Error" && (
+              <div>
+                <Label htmlFor="title">Title</Label>
+                <Input
+                  id="title"
+                  placeholder="Enter title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
+            )
           )}
           {detectionType === "Program Content" && (
             <>
@@ -354,7 +415,9 @@ export default function LabelDialog({
                 <Label htmlFor="programFormatType">Format Type</Label>
                 <Select
                   value={programFormatType}
-                  onValueChange={(value) => setProgramFormatType(value as ProgramFormatType)}
+                  onValueChange={(value) =>
+                    setProgramFormatType(value as ProgramFormatType)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select format type" />
@@ -362,9 +425,15 @@ export default function LabelDialog({
                   <SelectContent>
                     <SelectItem value="Film">Film</SelectItem>
                     <SelectItem value="Series">Series</SelectItem>
-                    <SelectItem value="Structured Studio Programs">Structured Studio Programs</SelectItem>
-                    <SelectItem value="Interactive Programs">Interactive Programs</SelectItem>
-                    <SelectItem value="Artistic Performances">Artistic Performances</SelectItem>
+                    <SelectItem value="Structured Studio Programs">
+                      Structured Studio Programs
+                    </SelectItem>
+                    <SelectItem value="Interactive Programs">
+                      Interactive Programs
+                    </SelectItem>
+                    <SelectItem value="Artistic Performances">
+                      Artistic Performances
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -372,25 +441,45 @@ export default function LabelDialog({
                 <Label htmlFor="programContentType">Content Type</Label>
                 <Select
                   value={programContentType}
-                  onValueChange={(value) => setProgramContentType(value as ProgramContentType)}
+                  onValueChange={(value) =>
+                    setProgramContentType(value as ProgramContentType)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select content type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Popular Drama / Comedy">Popular Drama / Comedy</SelectItem>
-                    <SelectItem value="Animation Film">Animation Film</SelectItem>
-                    <SelectItem value="Documentary Film">Documentary Film</SelectItem>
+                    <SelectItem value="Popular Drama / Comedy">
+                      Popular Drama / Comedy
+                    </SelectItem>
+                    <SelectItem value="Animation Film">
+                      Animation Film
+                    </SelectItem>
+                    <SelectItem value="Documentary Film">
+                      Documentary Film
+                    </SelectItem>
                     <SelectItem value="Short Film">Short Film</SelectItem>
                     <SelectItem value="Other Film">Other Film</SelectItem>
                     <SelectItem value="General News">General News</SelectItem>
-                    <SelectItem value="Animation Series / Cartoon">Animation Series / Cartoon</SelectItem>
-                    <SelectItem value="Documentary Series">Documentary Series</SelectItem>
-                    <SelectItem value="Docusoap / Reality Series">Docusoap / Reality Series</SelectItem>
+                    <SelectItem value="Animation Series / Cartoon">
+                      Animation Series / Cartoon
+                    </SelectItem>
+                    <SelectItem value="Documentary Series">
+                      Documentary Series
+                    </SelectItem>
+                    <SelectItem value="Docusoap / Reality Series">
+                      Docusoap / Reality Series
+                    </SelectItem>
                     <SelectItem value="Other Series">Other Series</SelectItem>
-                    <SelectItem value="Science / Geography">Science / Geography</SelectItem>
-                    <SelectItem value="Lifestyle: Showbiz, Stars">Lifestyle: Showbiz, Stars</SelectItem>
-                    <SelectItem value="Entertainment: Humor">Entertainment: Humor</SelectItem>
+                    <SelectItem value="Science / Geography">
+                      Science / Geography
+                    </SelectItem>
+                    <SelectItem value="Lifestyle: Showbiz, Stars">
+                      Lifestyle: Showbiz, Stars
+                    </SelectItem>
+                    <SelectItem value="Entertainment: Humor">
+                      Entertainment: Humor
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -401,7 +490,9 @@ export default function LabelDialog({
               <Label htmlFor="spotsFormatType">Format Type</Label>
               <Select
                 value={spotsFormatType}
-                onValueChange={(value) => setSpotsFormatType(value as SpotsFormatType)}
+                onValueChange={(value) =>
+                  setSpotsFormatType(value as SpotsFormatType)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select format type" />
@@ -419,17 +510,25 @@ export default function LabelDialog({
               <Label htmlFor="autoPromoContentType">Content Type</Label>
               <Select
                 value={autoPromoContentType}
-                onValueChange={(value) => setAutoPromoContentType(value as AutoPromoContentType)}
+                onValueChange={(value) =>
+                  setAutoPromoContentType(value as AutoPromoContentType)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select content type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Foreign">Foreign</SelectItem>
-                  <SelectItem value="Other Advertising">Other Advertising</SelectItem>
-                  <SelectItem value="Sports: Football">Sports: Football</SelectItem>
+                  <SelectItem value="Other Advertising">
+                    Other Advertising
+                  </SelectItem>
+                  <SelectItem value="Sports: Football">
+                    Sports: Football
+                  </SelectItem>
                   <SelectItem value="Tele-shopping">Tele-shopping</SelectItem>
-                  <SelectItem value="Other / Mixed / Unknown">Other / Mixed / Unknown</SelectItem>
+                  <SelectItem value="Other / Mixed / Unknown">
+                    Other / Mixed / Unknown
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -461,7 +560,9 @@ export default function LabelDialog({
               <Label htmlFor="errorType">Error Type</Label>
               <Select
                 value={errorType}
-                onValueChange={(value) => setErrorType(value as "Signal Lost" | "Blank Image")}
+                onValueChange={(value) =>
+                  setErrorType(value as "Signal Lost" | "Blank Image")
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select error type" />
@@ -474,7 +575,11 @@ export default function LabelDialog({
             </div>
           )}
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsOpen(false)} disabled={labeling}>
+            <Button
+              variant="outline"
+              onClick={() => setIsOpen(false)}
+              disabled={labeling}
+            >
               Cancel
             </Button>
             <Button onClick={handleLabelEvent} disabled={labeling}>

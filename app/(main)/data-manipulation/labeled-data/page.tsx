@@ -36,15 +36,13 @@ export default function LabeledDataTablePage() {
 
   useEffect(() => {
     // Get deviceId and name from localStorage
-    const storedDeviceId = localStorage.getItem('deviceId') || '';
+    const storedDeviceId = localStorage.getItem('deviceId') || 'UNKNOWN';
     const storedName = localStorage.getItem('name') || '';
     
     // Set initial filter values
-    setDeviceFilter(storedDeviceId);
-    setLabeledByFilter(storedName);
-    
-    // Make inputs non-editable if deviceId is not UNKNOWN
     setIsDeviceIdEditable(storedDeviceId === 'UNKNOWN');
+    setDeviceFilter(storedDeviceId === 'UNKNOWN' ? '' : storedDeviceId);
+    setLabeledByFilter(storedDeviceId === 'UNKNOWN' ? '' : storedName);
   }, []);
 
   const fetchLabeledEvents = async (page: number = 1) => {
@@ -96,11 +94,11 @@ export default function LabeledDataTablePage() {
   };
 
   const handleReset = () => {
-    const storedDeviceId = localStorage.getItem('deviceId') || '';
+    const storedDeviceId = localStorage.getItem('deviceId') || 'UNKNOWN';
     const storedName = localStorage.getItem('name') || '';
     
-    setDeviceFilter(isDeviceIdEditable ? '' : storedDeviceId);
-    setLabeledByFilter(isDeviceIdEditable ? '' : storedName);
+    setDeviceFilter(storedDeviceId === 'UNKNOWN' ? '' : storedDeviceId);
+    setLabeledByFilter(storedDeviceId === 'UNKNOWN' ? '' : storedName);
     setDetectionTypeFilter('');
     setDate('');
     setStartTime('');
@@ -162,20 +160,22 @@ export default function LabeledDataTablePage() {
               <Label htmlFor="deviceFilter">Device ID</Label>
               <Input
                 id="deviceFilter"
-                placeholder="Filter by device..."
+                placeholder={isDeviceIdEditable ? "e.g., R-1002" : ""}
                 value={deviceFilter}
-                onChange={(e) => isDeviceIdEditable && setDeviceFilter(e.target.value)}
+                onChange={(e) => setDeviceFilter(e.target.value)}
                 disabled={!isDeviceIdEditable}
+                className={isDeviceIdEditable ? "" : "cursor-not-allowed"}
               />
             </div>
             <div>
               <Label htmlFor="labeledByFilter">Labeled By</Label>
               <Input
                 id="labeledByFilter"
-                placeholder="Filter by labeled by..."
+                placeholder={isDeviceIdEditable ? "Filter by labeled by..." : ""}
                 value={labeledByFilter}
-                onChange={(e) => isDeviceIdEditable && setLabeledByFilter(e.target.value)}
+                onChange={(e) => setLabeledByFilter(e.target.value)}
                 disabled={!isDeviceIdEditable}
+                className={isDeviceIdEditable ? "" : "cursor-not-allowed"}
               />
             </div>
             <div>
