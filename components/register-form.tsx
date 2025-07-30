@@ -22,6 +22,7 @@ export function RegisterForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [deviceId, setDeviceId] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -37,8 +38,14 @@ export function RegisterForm({
       return;
     }
 
+    if (!deviceId) {
+      setError("Device ID is required");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      await register({ email, password, name });
+      await register({ email, password, name, deviceId });
       router.push("/login");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
@@ -78,6 +85,17 @@ export function RegisterForm({
                   placeholder="m@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid gap-3">
+                <Label htmlFor="deviceId">Device ID</Label>
+                <Input
+                  id="deviceId"
+                  type="text"
+                  placeholder="Your device ID"
+                  value={deviceId}
+                  onChange={(e) => setDeviceId(e.target.value)}
                   required
                 />
               </div>

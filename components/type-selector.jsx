@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-function StatusDot({ className }: { className?: string }) {
+function StatusDot({ className }) {
   return (
     <svg
       width="8"

@@ -65,14 +65,21 @@ export interface ProgramContentDetails {
   seasonId?: string;
 }
 
-export type CommercialBreakDetails = object;
+export interface CommercialBreakDetails {
+  category?: string;
+  sector?: string;
+}
 
 export interface SpotsOutsideBreaksDetails {
   formatType?: 'BB' | 'CAPB' | 'OOBS';
+  category?: string;
+  sector?: string;
 }
 
 export interface AutoPromoDetails {
   contentType?: 'Foreign' | 'Other Advertising' | 'Sports: Football' | 'Tele-shopping' | 'Other / Mixed / Unknown';
+  category?: string;
+  sector?: string;
 }
 
 export interface SongDetails {
