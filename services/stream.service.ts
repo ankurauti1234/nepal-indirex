@@ -100,7 +100,7 @@ export interface ImageEventResponse {
   date: ReactNode;
   id: number;
   deviceId: string;
-  timestamp: string;
+  timestamp: number;
   type: number; // e.g., 29 (Recognized), 33 (Unrecognized)
   details: ImageEventDetails;
   createdAt: string;

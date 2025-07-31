@@ -39,7 +39,7 @@ export interface AuthResponse {
 export interface EventResponse {
   id: number;
   deviceId: string;
-  timestamp: string;
+  timestamp: number;
   type: number;
   details: unknown;
   createdAt: string;

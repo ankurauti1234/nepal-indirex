@@ -51,13 +51,9 @@ export default function EventsTable({
     }
   };
 
-const convertTimestampToLocalTime = (timestamp: string) => {
-  const date = new Date(timestamp);
-  return date.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
+  const convertUnixToLocal = (unixTime: number) => {
+  const date = new Date(unixTime * 1000); // Convert seconds to milliseconds
+  return date.toLocaleString("en-IN"); // Or use .toLocaleString("en-IN") for Indian locale
 };
 
 
@@ -124,7 +120,7 @@ const convertTimestampToLocalTime = (timestamp: string) => {
                       {getEventTypeLabel(event.type)}
                     </Badge>
                   </TableCell>
-                 <TableCell>{convertTimestampToLocalTime(event.timestamp)}</TableCell>
+                 <TableCell>{convertUnixToLocal(event.timestamp)}</TableCell>
 
                   {/* <TableCell>{event.details.duration || "N/A"}s</TableCell> */}
                   <TableCell>
@@ -171,7 +167,7 @@ const convertTimestampToLocalTime = (timestamp: string) => {
                               {getEventTypeLabel(event.type)}
                             </div>
                         
-                           <div><strong>Time:</strong> {convertTimestampToLocalTime(event.timestamp)}</div>
+                           <div><strong>Time:</strong> {convertUnixToLocal(event.timestamp)}</div>
 
                             {/* <div>
                               <strong>Duration:</strong>{" "}
