@@ -53,7 +53,7 @@ export default function EventsTable({
 
   const convertUnixToLocal = (unixTime: number) => {
   const date = new Date(unixTime * 1000); // Convert seconds to milliseconds
-  return date.toLocaleString("en-IN"); // Or use .toLocaleString("en-IN") for Indian locale
+  return date.toLocaleString();
 };
 
 
