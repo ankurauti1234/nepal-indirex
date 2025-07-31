@@ -93,7 +93,7 @@ export default function EventsTable({
                 <TableHead>Type</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Time</TableHead>
-                <TableHead>Duration</TableHead>
+                {/* <TableHead>Duration</TableHead> */}
                 <TableHead>Image</TableHead>
               </TableRow>
             </TableHeader>
@@ -117,7 +117,7 @@ export default function EventsTable({
                   </TableCell>
                   <TableCell>{event.date}</TableCell>
                   <TableCell>{event.begin}</TableCell>
-                  <TableCell>{event.details.duration || "N/A"}s</TableCell>
+                  {/* <TableCell>{event.details.duration || "N/A"}s</TableCell> */}
                   <TableCell>
                     <Dialog>
                       <DialogTrigger asChild>
@@ -167,10 +167,10 @@ export default function EventsTable({
                             <div>
                               <strong>Time:</strong> {event.begin}
                             </div>
-                            <div>
+                            {/* <div>
                               <strong>Duration:</strong>{" "}
                               {event.details.duration || "N/A"}s
-                            </div>
+                            </div> */}
                           </div>
                         </div>
                       </DialogContent>

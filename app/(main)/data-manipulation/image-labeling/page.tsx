@@ -8,7 +8,6 @@ import LabelDialog from "@/components/labeling/LabelDialog";
 import PaginationControls from "@/components/labeling/PaginationControls";
 import {
   getEvents,
-  getLabeledEvents,
   ImageProcessingEventFilter,
   ImageEventResponse,
 } from "@/services/stream.service";
@@ -80,21 +79,12 @@ function ImageLabelingContent() {
       };
 
       const response = await getEvents(filters);
-      let filteredEvents = response.data || [];
-
-      const labeledEventsResponse = await getLabeledEvents({});
-      const labeledEventIds = labeledEventsResponse.data
-        ? labeledEventsResponse.data.map((event) => event.originalEventId)
-        : [];
-      filteredEvents = filteredEvents.filter(
-        (event) => !labeledEventIds.includes(event.id)
-      );
-
-      setImageEvents(filteredEvents);
+      setImageEvents(response.data || []);
       setTotalPages(response.pagination.pages);
       setCurrentPage(response.pagination.page);
     } catch (error) {
       console.error("Error fetching events:", error);
+      setImageEvents([]);
     } finally {
       setLoading(false);
     }
@@ -102,7 +92,7 @@ function ImageLabelingContent() {
 
   useEffect(() => {
     fetchImageEvents(currentPage);
-  }, [deviceFilter, date, startTime, endTime, eventType, limit]);
+  }, [deviceFilter, date, startTime, endTime, eventType, limit, currentPage]);
 
   const handleSelectEvent: (eventId: number | number[]) => void = (eventId) => {
     setSelectedEvents((prev) => {

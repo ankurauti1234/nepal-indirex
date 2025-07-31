@@ -352,7 +352,7 @@ export default function LabeledDataTablePage() {
                             </div>
                             <div>
                               <strong>Images:</strong>
-                              <div className="grid grid-cols-2 gap-4 mt-2">
+                              <div className="grid grid-cols-2 gap-4 mt-2 h-96 overflow-y-auto">
                                 {(event.images ?? []).map((image, index) => (
                                   <img
                                     key={index}
