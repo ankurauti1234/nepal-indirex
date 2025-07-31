@@ -51,6 +51,12 @@ export default function EventsTable({
     }
   };
 
+  const convertUnixToLocal = (unixTime: number) => {
+  const date = new Date(unixTime * 1000); // Convert seconds to milliseconds
+  return date.toLocaleString(); // Or use .toLocaleString("en-IN") for Indian locale
+};
+
+
   return (
     <Card>
       <CardContent>
@@ -91,7 +97,6 @@ export default function EventsTable({
                 <TableHead>Channel</TableHead>
                 <TableHead>Score</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Date</TableHead>
                 <TableHead>Time</TableHead>
                 {/* <TableHead>Duration</TableHead> */}
                 <TableHead>Image</TableHead>
@@ -115,8 +120,8 @@ export default function EventsTable({
                       {getEventTypeLabel(event.type)}
                     </Badge>
                   </TableCell>
-                  <TableCell>{event.date}</TableCell>
-                  <TableCell>{event.begin}</TableCell>
+                 <TableCell>{convertUnixToLocal(event.timestamp)}</TableCell>
+
                   {/* <TableCell>{event.details.duration || "N/A"}s</TableCell> */}
                   <TableCell>
                     <Dialog>
@@ -161,12 +166,9 @@ export default function EventsTable({
                               <strong>Type:</strong>{" "}
                               {getEventTypeLabel(event.type)}
                             </div>
-                            <div>
-                              <strong>Date:</strong> {event.date}
-                            </div>
-                            <div>
-                              <strong>Time:</strong> {event.begin}
-                            </div>
+                        
+                           <div><strong>Time:</strong> {convertUnixToLocal(event.timestamp)}</div>
+
                             {/* <div>
                               <strong>Duration:</strong>{" "}
                               {event.details.duration || "N/A"}s
